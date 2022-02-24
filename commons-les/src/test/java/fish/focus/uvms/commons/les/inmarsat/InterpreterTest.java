@@ -1,11 +1,11 @@
 package fish.focus.uvms.commons.les.inmarsat;
 
-import eu.europa.ec.fisheries.schema.exchange.movement.mobileterminal.v1.IdList;
-import eu.europa.ec.fisheries.schema.exchange.movement.mobileterminal.v1.IdType;
-import eu.europa.ec.fisheries.schema.exchange.movement.mobileterminal.v1.MobileTerminalId;
-import eu.europa.ec.fisheries.schema.exchange.movement.v1.*;
-import eu.europa.ec.fisheries.schema.exchange.plugin.types.v1.PluginType;
-import eu.europa.ec.fisheries.uvms.exchange.model.mapper.ExchangeModuleRequestMapper;
+import fish.focus.schema.exchange.movement.mobileterminal.v1.IdList;
+import fish.focus.schema.exchange.movement.mobileterminal.v1.IdType;
+import fish.focus.schema.exchange.movement.mobileterminal.v1.MobileTerminalId;
+import fish.focus.schema.exchange.movement.v1.*;
+import fish.focus.schema.exchange.plugin.types.v1.PluginType;
+import fish.focus.uvms.exchange.model.mapper.ExchangeModuleRequestMapper;
 import fish.focus.uvms.commons.les.inmarsat.body.PositionReport;
 import org.junit.Ignore;
 import org.junit.Test;

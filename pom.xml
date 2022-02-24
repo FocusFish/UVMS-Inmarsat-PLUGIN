@@ -5,10 +5,10 @@
     <groupId>fish.focus.uvms.maven</groupId>
     <artifactId>uvms-pom</artifactId>
     <relativePath />
-    <version>3.8</version>
+    <version>3.16</version>
   </parent>
 
-  <groupId>eu.europa.ec.fisheries.uvms.plugins</groupId>
+  <groupId>fish.focus.uvms.plugins</groupId>
   <artifactId>inmarsat</artifactId>
   <version>3.1.12-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -21,9 +21,9 @@
 
   <properties>
     <docker.dev.version>4.1.4</docker.dev.version>
-    <uvms.common.version>4.1.11</uvms.common.version>
-    <exchange.model.version>5.3.22-UVMS</exchange.model.version>
-    <scm.url>scm:git:https://github.com/UnionVMS/inmarsat-plugin.git</scm.url>
+    <uvms.common.version>4.1.12</uvms.common.version>
+    <exchange.model.version>5.3.23</exchange.model.version>
+    <scm.url>scm:git:https://github.com/FocusFish/UVMS-Inmarsat-PLUGIN.git</scm.url>
     <scm.connection>${scm.url}</scm.connection>
     <defaultLibBundleDir>APP-INF/lib</defaultLibBundleDir>
   </properties>
@@ -31,7 +31,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>eu.europa.ec.fisheries.uvms.plugins</groupId>
+        <groupId>fish.focus.uvms.plugins</groupId>
         <artifactId>commons-les</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -41,14 +41,14 @@
         <version>${uvms-pom.commons.lang3.version}</version>
       </dependency>
       <dependency>
-        <groupId>eu.europa.ec.fisheries.uvms.exchange</groupId>
+        <groupId>fish.focus.uvms.exchange</groupId>
         <artifactId>exchange-model</artifactId>
         <version>${exchange.model.version}</version>
       </dependency>
       <dependency>
         <groupId>fish.focus.uvms.maven</groupId>
         <artifactId>uvms-pom-arquillian-deps</artifactId>
-        <version>3.8</version>
+        <version>3.16</version>
         <type>pom</type>
       </dependency>
       <dependency>
@@ -69,7 +69,7 @@
       <groupId>fish.focus.uvms.maven</groupId>
       <artifactId>uvms-pom-java11-deps</artifactId>
       <type>pom</type>
-      <version>3.8</version>
+      <version>3.16</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
