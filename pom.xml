@@ -31,7 +31,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>fish.focus.uvms.plugins</groupId>
+        <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
         <artifactId>commons-les</artifactId>
         <version>${project.version}</version>
       </dependency>

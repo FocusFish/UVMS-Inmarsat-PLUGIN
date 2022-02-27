@@ -41,7 +41,7 @@
             <version>${uvms.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>fish.focus.uvms.plugins</groupId>
+            <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
             <artifactId>commons-les</artifactId>
         </dependency>
         <dependency>
