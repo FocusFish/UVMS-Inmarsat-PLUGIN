@@ -91,7 +91,7 @@ public class InmarsatPlugin  {
     private void startup() {
         Properties pluginProperties = functions.getPropertiesFromFile(this.getClass(), PLUGIN_PROPERTIES);
         setPluginApplicationProperties(pluginProperties);
-        registerClassName = getPluginApplicationProperty("application.groupid") + "." + getPluginApplicationProperty("application.name");
+        registerClassName = getPluginApplicationProperty("application.groupid");
         LOGGER.debug("Plugin will try to register as:{}", registerClassName);
         setPluginProperties(functions.getPropertiesFromFile(this.getClass(), SETTINGS_PROPERTIES));
         setPluginCapabilities(functions.getPropertiesFromFile(this.getClass(), CAPABILITIES_PROPERTIES));
