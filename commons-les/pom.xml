@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
+        <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
         <artifactId>inmarsat</artifactId>
-        <groupId>eu.europa.ec.fisheries.uvms.plugins</groupId>
-        <version>3.1.12-SNAPSHOT</version>
+        <version>3.1.12</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -12,12 +12,12 @@
     <dependencies>
 
         <dependency>
-            <groupId>eu.europa.ec.fisheries.uvms.commons</groupId>
+            <groupId>fish.focus.uvms.commons</groupId>
             <artifactId>uvms-commons-message</artifactId>
             <version>${uvms.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.fisheries.uvms.exchange</groupId>
+            <groupId>fish.focus.uvms.exchange</groupId>
             <artifactId>exchange-model</artifactId>
             <scope>test</scope>
         </dependency>

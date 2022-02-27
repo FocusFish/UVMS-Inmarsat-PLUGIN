@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.europa.ec.fisheries.uvms.plugins</groupId>
+        <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
         <artifactId>inmarsat</artifactId>
-        <version>3.1.12-SNAPSHOT</version>
+        <version>3.1.12</version>
     </parent>
 
     <artifactId>inmarsat-service</artifactId>
@@ -26,20 +26,9 @@
 
     </properties>
 
-
-    <profiles>
-        <profile>
-            <id>weblogic</id>
-            <properties>
-                <application.connection.factory>ConnectionFactory</application.connection.factory>
-                <application.destination.jndi>jms/topic/EventBus</application.destination.jndi>
-            </properties>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
-            <groupId>eu.europa.ec.fisheries.uvms.exchange</groupId>
+            <groupId>fish.focus.uvms.exchange</groupId>
             <artifactId>exchange-model</artifactId>
         </dependency>
         <dependency>
@@ -47,12 +36,12 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.fisheries.uvms.commons</groupId>
+            <groupId>fish.focus.uvms.commons</groupId>
             <artifactId>uvms-commons-message</artifactId>
             <version>${uvms.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.fisheries.uvms.plugins</groupId>
+            <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
             <artifactId>commons-les</artifactId>
         </dependency>
         <dependency>
