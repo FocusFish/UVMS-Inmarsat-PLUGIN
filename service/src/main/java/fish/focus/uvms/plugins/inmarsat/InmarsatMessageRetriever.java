@@ -222,7 +222,7 @@ public class InmarsatMessageRetriever {
     }
 
     public String getRegisterClassName() {
-        return getPluginApplicationProperty("application.groupid") + "." + getPluginApplicationProperty("application.name");
+        return getPluginApplicationProperty("application.groupid");
     }
 
     private String getPluginApplicationProperty(String key) {
