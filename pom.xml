@@ -20,7 +20,7 @@
   </scm>
 
   <properties>
-    <docker.dev.version>4.2.17</docker.dev.version>
+    <docker.dev.version>4.2.21</docker.dev.version>
     <uvms.common.version>4.1.12</uvms.common.version>
     <exchange.model.version>5.3.27</exchange.model.version>
     <scm.url>scm:git:https://github.com/FocusFish/UVMS-Inmarsat-PLUGIN.git</scm.url>
