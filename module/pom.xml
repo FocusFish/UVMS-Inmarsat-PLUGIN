@@ -5,7 +5,7 @@
     <parent>
         <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
         <artifactId>inmarsat</artifactId>
-        <version>3.1.14</version>
+        <version>3.1.15</version>
     </parent>
 
     <artifactId>inmarsat-module</artifactId>
@@ -54,7 +54,7 @@
                     <plugin>
                         <groupId>org.wildfly.plugins</groupId>
                         <artifactId>wildfly-maven-plugin</artifactId>
-                        <version>2.1.0.Final</version>
+                        <version>4.2.1.Final</version>
                         <executions>
                             <execution>
                                 <id>undeploy</id>
