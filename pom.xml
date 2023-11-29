@@ -10,7 +10,7 @@
 
   <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
   <artifactId>inmarsat</artifactId>
-  <version>3.1.15-SNAPSHOT</version>
+  <version>3.1.15</version>
   <packaging>pom</packaging>
 
   <scm>
