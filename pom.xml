@@ -69,7 +69,7 @@
       <groupId>fish.focus.uvms.maven</groupId>
       <artifactId>uvms-pom-java11-deps</artifactId>
       <type>pom</type>
-      <version>3.24</version>
+      <version>3.26</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
