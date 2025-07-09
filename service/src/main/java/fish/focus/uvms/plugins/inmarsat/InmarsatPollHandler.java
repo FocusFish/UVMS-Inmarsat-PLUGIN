@@ -4,7 +4,9 @@ import fish.focus.schema.exchange.common.v1.CommandType;
 import fish.focus.schema.exchange.common.v1.KeyValueType;
 import fish.focus.schema.exchange.plugin.types.v1.PollType;
 import fish.focus.schema.exchange.plugin.types.v1.PollTypeType;
-import fish.focus.uvms.plugins.inmarsat.data.*;
+import fish.focus.uvms.plugins.inmarsat.data.InmarsatPendingResponse;
+import fish.focus.uvms.plugins.inmarsat.data.PollResponse;
+import fish.focus.uvms.plugins.inmarsat.data.StatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,23 +27,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * har hatt mulighet til å lage sine "tolkninger" på endel punkter. Hvis du ser på data rapport pakken (PosRep-C_2l.doc)
  * så ser du at nederst i pakke en er MEM-code. Den mest brukte MEM code er 11 I attribute bytene nederst i pakke en
  * vil mem 11 angi at atribute bytene inneholder  «time of position».
- *
+ * <p>
  * Angående scheduled programming. Legger med noe veldig gammel informasjon jeg laget på gruppe programmering:
- *
+ * <p>
  * First you have to program the terminals to send data report, and afterwards you have to start the reporting.
  * You have to send 2 poll commands to get the mobiles to report scheduled
- *
+ * <p>
  * 1)  First you have to send the program command:
  * If you want the report to start at e.g. 13:28 UTC today you have to send the following command:
- *
+ * <p>
  * poll 0,G,4661,N,1,0,4,,5611,24
  * The P8 parameter is the start frame. The start time must be calculated according to the formula:
  * (((hour*60)+minute)*60)/8.64 = start frame number. (night and day (24 hours) are divided in  10000 frame's a'8.64 sec.).
  * The "24" at the end indicate that the terminals shall send one report every hour.
- *
+ * <p>
  * 2)  Afterwards you have to start the reporting command:
  * e.g:  poll 0,G,4661,D,1,0,5
- *
+ * <p>
  * 3)  TO STOP THE REPORTING.
  * The data reporting are stopped using the command
  * e.g.: poll 0,G,4661,N,1,0,6
@@ -73,12 +75,12 @@ public class InmarsatPollHandler {
         try {
             response = sendPoll(pollType);
             if (response.getReference() == null) {
-                LOGGER.error("Error no reference for poll with pollId: " + pollType.getPollId());
+                LOGGER.error("Error no reference for poll with pollId: {}", pollType.getPollId());
                 return response; //consumed but erroneous
             }
             LOGGER.info("sent poll with pollId: {} and reference: {} ", pollType.getPollId(), response.getReference());
 
-            if(pollType.getPollTypeType() == PollTypeType.POLL) {
+            if (pollType.getPollTypeType() == PollTypeType.POLL) {
                 constructIPRAndAddInPPRL(command, response.getReference());
             }
             return response;
@@ -106,7 +108,7 @@ public class InmarsatPollHandler {
 
         List<String> wrkOceanRegions = getOceanRegions(poll);
 
-        if(wrkOceanRegions.isEmpty()){
+        if (wrkOceanRegions.isEmpty()) {
             LOGGER.error("No Ocean Region in request. Check MobileTerminal. No Poll can be executed.");
             result.setMessage("No Ocean Region in request. Check MobileTerminal. No Poll can be executed.");
             return result;
@@ -115,7 +117,7 @@ public class InmarsatPollHandler {
         Socket socket = null;
 
         PrintStream output = null;
-        try{
+        try {
             socket = new Socket();
             socket.connect(new InetSocketAddress(url, port), Constants.SOCKET_TIMEOUT);
             socket.setSoTimeout(Constants.SOCKET_TIMEOUT);
@@ -130,7 +132,7 @@ public class InmarsatPollHandler {
 
 
             // Sends one or more poll commands, one for each ocean region, until a reference number is received.
-            for(String oceanRegion : wrkOceanRegions) {
+            for (String oceanRegion : wrkOceanRegions) {
                 result = pollSender.sendPollCommand(poll, input, output, oceanRegion);
                 if (result.getReference() != null) {
                     LOGGER.info("sendPoll invoked. Reference number : {} ", result.getReference());
@@ -141,11 +143,10 @@ public class InmarsatPollHandler {
             LOGGER.error("SEND POLL ERROR! pollId: {}", poll.getPollId());
             LOGGER.error(t.toString(), t);
             result.setMessage("Error sending poll: " + t);
-        }
-        finally{
-            if(output != null)
+        } finally {
+            if (output != null)
                 functions.write("QUIT", output);
-            if(socket != null) {
+            if (socket != null) {
                 try {
                     socket.close();
                 } catch (IOException e) {
@@ -170,7 +171,6 @@ public class InmarsatPollHandler {
     }
 
     private InmarsatPendingResponse createAnInmarsatPendingResponseObject(PollType poll, String result) {
-
         int refNumber = -1;
         try {
             refNumber = Integer.parseInt(result);
@@ -183,8 +183,8 @@ public class InmarsatPollHandler {
         ipr.setPollType(poll);
         ipr.setMsgId(poll.getPollId());
         ipr.setReferenceNumber(refNumber);
-        List<KeyValueType> pollReciver = poll.getPollReceiver();
-        for (KeyValueType element : pollReciver) {
+        List<KeyValueType> pollReceiver = poll.getPollReceiver();
+        for (KeyValueType element : pollReceiver) {
             if (element.getKey().equalsIgnoreCase("MOBILE_TERMINAL_ID")) {
                 ipr.setMobTermId(element.getValue());
             } else if (element.getKey().equalsIgnoreCase("DNID")) {

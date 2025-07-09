@@ -16,22 +16,19 @@ import fish.focus.uvms.exchange.model.constant.ExchangeModelConstants;
 import fish.focus.uvms.plugins.inmarsat.data.ModuleQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static fish.focus.uvms.plugins.inmarsat.data.ModuleQueue.EXCHANGE;
-import javax.annotation.PostConstruct;
+
 import javax.annotation.Resource;
 import javax.ejb.LocalBean;
 import javax.jms.*;
 
+import static fish.focus.uvms.plugins.inmarsat.data.ModuleQueue.EXCHANGE;
+
 @LocalBean
 public class PluginMessageProducer {
-
-
     private static final Logger LOGGER = LoggerFactory.getLogger(PluginMessageProducer.class);
-
 
     @Resource(mappedName = "java:/" + ExchangeModelConstants.EXCHANGE_MESSAGE_IN_QUEUE)
     private Queue exchangeQueue;
-
 
     @Resource(mappedName = "java:/" + ExchangeModelConstants.PLUGIN_EVENTBUS)
     private Topic eventBus;
@@ -39,12 +36,7 @@ public class PluginMessageProducer {
     @Resource(mappedName = "java:/ConnectionFactory")
     private ConnectionFactory connectionFactory;
 
-    @PostConstruct
-    public void resourceLookup() {
-    }
-
     public void sendResponseMessage(String text, TextMessage requestMessage) throws JMSException {
-
         try (Connection connection = connectionFactory.createConnection();
              Session session = connection.createSession(false, 1);
              MessageProducer producer = session.createProducer(requestMessage.getJMSReplyTo());
@@ -60,7 +52,6 @@ public class PluginMessageProducer {
     }
 
     public String sendEventBusMessage(String text, String serviceName, String function) throws JMSException {
-
         try (Connection connection = connectionFactory.createConnection();
              Session session = connection.createSession(false, 1);
              MessageProducer producer = session.createProducer(eventBus);
@@ -104,5 +95,4 @@ public class PluginMessageProducer {
             throw new JMSException(e.getMessage());
         }
     }
-
 }

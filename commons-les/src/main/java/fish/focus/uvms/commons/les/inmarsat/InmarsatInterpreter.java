@@ -7,37 +7,28 @@ import fish.focus.uvms.commons.les.inmarsat.header.HeaderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
-import javax.jms.Queue;
 import javax.jms.*;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 
 @Stateless
 public class InmarsatInterpreter {
-
-
     private static final String INMARSAT_FAILED_REPORT_QUEUE = "jms/queue/UVMSPluginFailedReport";
+    private static final Logger LOGGER = LoggerFactory.getLogger(InmarsatInterpreter.class);
+    private static final byte[] HEADER_PATTERN = ByteBuffer.allocate(4).put((byte) InmarsatDefinition.API_SOH)
+            .put(InmarsatDefinition.API_LEAD_TEXT.getBytes()).array();
+    private static final int PATTERN_LENGTH = HEADER_PATTERN.length;
 
     @Resource(mappedName = "java:/" + INMARSAT_FAILED_REPORT_QUEUE)
     private Queue inmarsatFailedReportQueue;
 
     @Resource(mappedName = "java:/ConnectionFactory")
     private ConnectionFactory connectionFactory;
-
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(InmarsatInterpreter.class);
-    private static final byte[] HEADER_PATTERN = ByteBuffer.allocate(4).put((byte) InmarsatDefinition.API_SOH)
-            .put(InmarsatDefinition.API_LEAD_TEXT.getBytes()).array();
-    private static final int PATTERN_LENGTH = HEADER_PATTERN.length;
-
-
-    @PostConstruct
-    public void resourceLookup() {
-    }
 
     public InmarsatMessage[] byteToInmMessage(final byte[] fileBytes) {
         byte[] bytes = insertMissingData(fileBytes);
@@ -58,10 +49,9 @@ public class InmarsatInterpreter {
                 } catch (InmarsatException e) {
                     LOGGER.error(e.toString(), e);
                     try {
-                        sendFailedReportMessage(messageBytes, fileBytes,   e);
+                        sendFailedReportMessage(messageBytes, fileBytes, e);
                     } catch (JMSException ee) {
-                        LOGGER.error("could not post rejected message to queue : ");
-                        LOGGER.error(Arrays.toString(messageBytes));
+                        LOGGER.error("could not post rejected message to queue : {}", Arrays.toString(messageBytes));
                     }
                     continue;
                 }
@@ -71,73 +61,18 @@ public class InmarsatInterpreter {
                 } else {
                     LOGGER.error("Could not validate position(s)");
                     try {
-                        sendFailedReportMessage(messageBytes, fileBytes,  null);
+                        sendFailedReportMessage(messageBytes, fileBytes, null);
                     } catch (JMSException e) {
-                        LOGGER.error("could not post rejected message to queue : ");
-                        LOGGER.error(Arrays.toString(messageBytes));
+                        LOGGER.error("could not post rejected message to queue : {}", Arrays.toString(messageBytes));
                     }
                 }
             }
         }
-        return messages.toArray(new InmarsatMessage[0]); // "new InmarsatMessage[0]" is used instead of "new
-        // Inmarsat[messages.size()]" to get better performance
+
+        return messages.toArray(new InmarsatMessage[0]);
     }
 
-    List<byte[]> split(byte[] in) {
-        List<byte[]> ret = new ArrayList<>();
-        if (in == null) {
-            ret.add(new byte[0]);
-            return ret;
-        }
-        if (in.length < 50000) {
-            ret.add(in);
-            return ret;
-        }
-        byte[] part1 = Arrays.copyOfRange(in, 0, 50000);
-        byte[] part2 = Arrays.copyOfRange(in, 50000, in.length );
-        ret.add(part1);
-        ret.add(part2);
-        return ret;
-
-
-    }
-
-    public String sendFailedReportMessageSimple(byte[] incomingMessage, Exception exception) throws JMSException {
-
-        String firstmsgId = "";
-        List<byte[]> splitList = split(incomingMessage);
-
-        if(connectionFactory == null) return "";
-
-        try (Connection connection = connectionFactory.createConnection();
-             Session session = connection.createSession(false, 1);
-             MessageProducer producer = session.createProducer(inmarsatFailedReportQueue);
-        ) {
-
-            for(byte[] messagePart : splitList) {
-
-                if(messagePart.length > 0) {
-                    BytesMessage message = session.createBytesMessage();
-                    message.setStringProperty("messagesource", "INMARSAT_C");
-                    message.setStringProperty("message_as_string", byte2str(messagePart));
-                    if (exception != null) {
-                        message.setStringProperty("exception", exception.toString());
-                    }
-                    message.writeBytes(messagePart);
-                    producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-                    producer.send(message);
-                    firstmsgId = message.getJMSMessageID();
-                }
-            }
-            return firstmsgId;
-        } catch (JMSException e) {
-            throw e;
-        }
-    }
-
-
-    public String sendFailedReportMessage(byte[] incomingMessage, byte[] originalMessage,  Exception exception) throws JMSException {
-
+    public String sendFailedReportMessage(byte[] incomingMessage, byte[] originalMessage, Exception exception) throws JMSException {
         // we slice it up because buffersize is limited to 50000isch in Artemis
         if (incomingMessage.length > 50000) {
             byte[] truncated = Arrays.copyOfRange(incomingMessage, 0, 50000);
@@ -151,31 +86,30 @@ public class InmarsatInterpreter {
             exceptionStr = exception.toString();
         }
 
-        if(connectionFactory == null){
+        if (connectionFactory == null) {
             LOGGER.warn("could not send errormsg - you are probably in test");
             return "not send";
         }
-
 
         try (Connection connection = connectionFactory.createConnection();
              Session session = connection.createSession(false, 1);
              MessageProducer producer = session.createProducer(inmarsatFailedReportQueue);
         ) {
 
-                TextMessage message = session.createTextMessage();
-                message.setStringProperty("messagesource", "INMARSAT_C");
-                message.setStringProperty("message_as_hex_string", messageStr);
-                String padded64String = "Padded message as base64string: " + Base64.getEncoder().encodeToString(incomingMessage) + "\r\n";
-                String base64String = "Base message as base64string: " + Base64.getEncoder().encodeToString(originalMessage);
-                if (exception != null) {
-                    message.setStringProperty("exception", exceptionStr);
-                }
-                message.setText(padded64String + base64String);
-                producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-                producer.send(message);
+            TextMessage message = session.createTextMessage();
+            message.setStringProperty("messagesource", "INMARSAT_C");
+            message.setStringProperty("message_as_hex_string", messageStr);
+            String padded64String = "Padded message as base64string: " + Base64.getEncoder().encodeToString(incomingMessage) + "\r\n";
+            String base64String = "Base message as base64string: " + Base64.getEncoder().encodeToString(originalMessage);
+            if (exception != null) {
+                message.setStringProperty("exception", exceptionStr);
+            }
+            message.setText(padded64String + base64String);
+            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+            producer.send(message);
 
 
-                return message.getJMSMessageID();
+            return message.getJMSMessageID();
         } catch (JMSException e) {
             throw e;
         }
@@ -189,8 +123,7 @@ public class InmarsatInterpreter {
         for (byte b : message) {
             sb.append(String.format("%02x", b & 0xff));
         }
-        String s = sb.toString();
-        return s;
+        return sb.toString();
     }
 
     /**
@@ -200,7 +133,6 @@ public class InmarsatInterpreter {
      * @return message with fixed bytes
      */
     public byte[] insertMissingData(byte[] input) {
-
         byte[] output = insertMissingMsgRefNo(input);
         output = insertMissingMsgRefNo(output);         //incoming inmarsat message might be missing one or two bytes in the message reference number
         //output = insertMissingStoredTime(output);
@@ -211,8 +143,8 @@ public class InmarsatInterpreter {
             LOGGER.warn("Message fixed: {} -> {}", InmarsatUtils.bytesArrayToHexString(input),
                     InmarsatUtils.bytesArrayToHexString(output));
         }
-        return output;
 
+        return output;
     }
 
     private byte[] padHeaderToCorrectLength(final byte[] contents) {
@@ -228,17 +160,17 @@ public class InmarsatInterpreter {
 
                 int headerLength = headerType.getHeaderLength();
                 int realHeaderLength = header.length;
-                if((headerLength - 1) < realHeaderLength) {  // avoid arrayoutofbounds
+                if ((headerLength - 1) < realHeaderLength) {  // avoid arrayoutofbounds
                     int token = header[headerLength - 1];
                     if (token != InmarsatDefinition.API_EOH) {
-                        if(header[headerLength - 2] == InmarsatDefinition.API_EOH){
+                        if (header[headerLength - 2] == InmarsatDefinition.API_EOH) {
                             insert = true;
-                            insertPosition = i +  headerType.getHeaderStruct().getPositionStoredTime();
-                        }else if(header[headerLength - 3] == InmarsatDefinition.API_EOH){
+                            insertPosition = i + headerType.getHeaderStruct().getPositionStoredTime();
+                        } else if (header[headerLength - 3] == InmarsatDefinition.API_EOH) {
                             doubleInsert = true;
-                            insertPosition = i +  headerType.getHeaderStruct().getPositionStoredTime();
+                            insertPosition = i + headerType.getHeaderStruct().getPositionStoredTime();
                         }
-                        LOGGER.warn("Header is " + ((doubleInsert) ? "two" : "one") + " short so we add 00 as needed to the stored time position at position: " + insertPosition);    //since we dont use stored time it is "relatively" risk-free to add positions there
+                        LOGGER.warn("Header is {} short so we add 00 as needed to the stored time position at position: {}", (doubleInsert) ? "two" : "one", insertPosition);    //since we dont use stored time it is "relatively" risk-free to add positions there
 
                     }
                 }
@@ -247,7 +179,7 @@ public class InmarsatInterpreter {
                 insert = false;
                 insertPosition = 0;
                 output.write((byte) InmarsatDefinition.API_UNKNOWN_ERROR); // Just 00
-                if(doubleInsert){
+                if (doubleInsert) {
                     doubleInsert = false;
                     output.write((byte) InmarsatDefinition.API_UNKNOWN_ERROR); // One more 00
                 }
@@ -275,42 +207,9 @@ public class InmarsatInterpreter {
                     if (presentation == null) {
                         insert = true;
                         insertPosition = i + HeaderStruct.POS_REF_NO_START;
-                        LOGGER.warn("Presentation is not correct so we add 00 to msg ref no at position: " + insertPosition);
+                        LOGGER.warn("Presentation is not correct so we add 00 to msg ref no at position: {}", insertPosition);
                     }
                 }
-            }
-            if (insert && (insertPosition == i)) {
-                insert = false;
-                insertPosition = 0;
-                output.write((byte) 0x00);
-            }
-            output.write(input[i]);
-        }
-        return output.toByteArray();
-
-    }
-
-    private byte[] insertMissingStoredTime(byte[] contents) {
-        // Missing Date byte (incorrect date..)? - insert #00 in date first position
-        byte[] input = contents.clone();
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        boolean insert = false;
-        int insertPosition = 0;
-
-        for (int i = 0; i < input.length; i++) {
-            // Find SOH
-            if (InmarsatHeader.isStartOfMessage(input, i)) {
-                byte[] header = Arrays.copyOfRange(input, i, input.length);
-                HeaderType headerType = InmarsatHeader.getType(header);
-
-                Date headerDate = InmarsatHeader.getStoredTime(header);
-
-                if (headerDate.after(Calendar.getInstance(InmarsatDefinition.API_TIMEZONE).getTime())) {
-                    LOGGER.warn("Stored time is not correct so we add 00 to in first position");
-                    insert = true;
-                    insertPosition = i + headerType.getHeaderStruct().getPositionStoredTime();
-                }
-
             }
             if (insert && (insertPosition == i)) {
                 insert = false;
@@ -323,7 +222,6 @@ public class InmarsatInterpreter {
     }
 
     private byte[] insertMissingMemberNo(byte[] contents) {
-
         // Missing Member number - insert #FF before EOH
         // continue from previous cleaned data
         byte[] input = contents.clone();
@@ -350,8 +248,7 @@ public class InmarsatInterpreter {
                 output.write((byte) 0xFF);
                 insert = false;
                 insertPosition = 0;
-                LOGGER.warn("Message is missing member no, inserting FF at position: " + insertPosition);
-
+                LOGGER.warn("Message is missing member no, inserting FF at position: {}", insertPosition);
             }
             output.write(input[i]);
         }

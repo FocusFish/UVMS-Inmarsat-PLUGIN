@@ -8,14 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ejb.Singleton;
-import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class SettingsHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InmarsatPollHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SettingsHandler.class);
 
     private ConcurrentHashMap<String, String> settings = new ConcurrentHashMap<>();
 
@@ -67,10 +66,10 @@ public class SettingsHandler {
      * @return AcknowledgeTypeType
      */
     public AcknowledgeTypeType setConfig(SettingListType settings, String registerClassName) {
-        LOGGER.info(registerClassName + ".setConfig()");
+        LOGGER.info("{}.setConfig()", registerClassName);
         try {
             for (KeyValueType values : settings.getSetting()) {
-                LOGGER.debug("Setting [ " + values.getKey() + " : " + values.getValue() + " ]");
+                LOGGER.debug("Setting [ {} : {} ]", values.getKey(), values.getValue());
                 this.settings.put(values.getKey(), values.getValue());
             }
             return AcknowledgeTypeType.OK;

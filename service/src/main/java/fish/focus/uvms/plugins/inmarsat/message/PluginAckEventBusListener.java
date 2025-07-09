@@ -48,7 +48,7 @@ public class PluginAckEventBusListener implements MessageListener {
 
     @Override
     public void onMessage(Message inMessage) {
-        LOGGER.info("Eventbus listener for twostage at selector: {} got a message", startupService.getPluginResponseSubscriptionName());
+        LOGGER.info("Eventbus listener for two stage at selector: {} got a message", startupService.getPluginResponseSubscriptionName());
         TextMessage textMessage = (TextMessage) inMessage;
 
         try {
@@ -66,11 +66,11 @@ public class PluginAckEventBusListener implements MessageListener {
                                 settingsHandler.updateSettings(registerResponse.getService().getSettingList().getSetting());
                                 break;
                             case NOK:
-                                LOGGER.info("Register NOK: " + registerResponse.getAck().getMessage());
+                                LOGGER.info("Register NOK: {}", registerResponse.getAck().getMessage());
                                 startupService.setIsRegistered(Boolean.FALSE);
                                 break;
                             default:
-                                LOGGER.error("[ Type not supperted: ]" + request.getMethod());
+                                LOGGER.error("[ Type not supported: ] {}", request.getMethod());
                         }
                         break;
                     case UNREGISTER_SERVICE:
@@ -93,14 +93,13 @@ public class PluginAckEventBusListener implements MessageListener {
                 }
             }
         } catch (RuntimeException e) {
-            LOGGER.error("[ Error when receiving message in twostage ]", e);
+            LOGGER.error("[ Error when receiving message in two stage ]", e);
         }
     }
 
     private void handlePluginFault(TextMessage fault) {
         try {
-            LOGGER.error(
-                    startupService.getPluginResponseSubscriptionName() + " received fault : " + fault.getText() + " : " );
+            LOGGER.error("{} received fault : {} : ", startupService.getPluginResponseSubscriptionName(), fault.getText());
         } catch (JMSException e) {
             LOGGER.error("Could not get text from incoming message in inmarsat-c");
         }
