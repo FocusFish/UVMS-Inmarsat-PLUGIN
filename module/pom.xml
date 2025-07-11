@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>inmarsat-module</artifactId>
+    <name>inmarsat-module</name>
     <packaging>ear</packaging>
 
     <build>

@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>inmarsat-service</artifactId>
+    <name>inmarsat-service</name>
     <packaging>ejb</packaging>
 
     <properties>
