@@ -4,11 +4,11 @@ import fish.focus.uvms.commons.les.inmarsat.InmarsatDefinition;
 import fish.focus.uvms.commons.les.inmarsat.InmarsatException;
 import org.junit.Test;
 import org.mockito.Mockito;
+
 import java.util.Calendar;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.powermock.api.mockito.PowerMockito.when;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 public class PositionDateTest {

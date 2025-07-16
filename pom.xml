@@ -5,12 +5,13 @@
     <groupId>fish.focus.uvms.maven</groupId>
     <artifactId>uvms-pom</artifactId>
     <relativePath />
-    <version>3.19</version>
+    <version>3.33</version>
   </parent>
 
   <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
   <artifactId>inmarsat</artifactId>
-  <version>3.1.15</version>
+  <name>inmarsat</name>
+  <version>3.2.0</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -20,9 +21,9 @@
   </scm>
 
   <properties>
-    <docker.dev.version>4.2.21</docker.dev.version>
-    <uvms.common.version>4.1.12</uvms.common.version>
-    <exchange.model.version>5.3.27</exchange.model.version>
+    <docker.dev.version>4.5.0</docker.dev.version>
+    <uvms.common.version>4.1.15</uvms.common.version>
+    <exchange.model.version>5.4.0</exchange.model.version>
     <scm.url>scm:git:https://github.com/FocusFish/UVMS-Inmarsat-PLUGIN.git</scm.url>
     <scm.connection>${scm.url}</scm.connection>
     <defaultLibBundleDir>APP-INF/lib</defaultLibBundleDir>
@@ -48,7 +49,7 @@
       <dependency>
         <groupId>fish.focus.uvms.maven</groupId>
         <artifactId>uvms-pom-arquillian-deps</artifactId>
-        <version>3.19</version>
+        <version>3.33</version>
         <type>pom</type>
       </dependency>
       <dependency>
@@ -69,7 +70,7 @@
       <groupId>fish.focus.uvms.maven</groupId>
       <artifactId>uvms-pom-java11-deps</artifactId>
       <type>pom</type>
-      <version>3.19</version>
+      <version>3.33</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

@@ -18,7 +18,10 @@ import fish.focus.schema.exchange.plugin.v1.*;
 import fish.focus.schema.exchange.v1.ExchangeLogStatusTypeType;
 import fish.focus.uvms.exchange.model.mapper.ExchangePluginResponseMapper;
 import fish.focus.uvms.exchange.model.mapper.JAXBMarshaller;
-import fish.focus.uvms.plugins.inmarsat.*;
+import fish.focus.uvms.plugins.inmarsat.InmarsatMessageRetriever;
+import fish.focus.uvms.plugins.inmarsat.InmarsatPlugin;
+import fish.focus.uvms.plugins.inmarsat.InmarsatPollHandler;
+import fish.focus.uvms.plugins.inmarsat.SettingsHandler;
 import fish.focus.uvms.plugins.inmarsat.data.PollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,9 +140,9 @@ public class PluginNameEventBusListener implements MessageListener {
             }
             messageProducer.sendResponseMessage(responseMessage, textMessage);
         } catch (RuntimeException e) {
-            LOGGER.error("[ Error when receiving message in inmarsat-c " + startup.getRegisterClassName() + " ]", e);
+            LOGGER.error("[ Error when receiving message in inmarsat-c {} ]", startup.getRegisterClassName(), e);
         } catch (JMSException ex) {
-            LOGGER.error("[ Error when handling JMS message in inmarsat-c " + startup.getRegisterClassName() + " ]", ex);
+            LOGGER.error("[ Error when handling JMS message in inmarsat-c {} ]", startup.getRegisterClassName(), ex);
         }
     }
 }

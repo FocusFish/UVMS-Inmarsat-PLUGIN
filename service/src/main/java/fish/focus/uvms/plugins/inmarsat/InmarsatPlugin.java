@@ -2,8 +2,6 @@ package fish.focus.uvms.plugins.inmarsat;
 
 import fish.focus.schema.exchange.common.v1.AcknowledgeTypeType;
 import fish.focus.schema.exchange.common.v1.ReportType;
-import fish.focus.schema.exchange.module.v1.ExchangeModuleMethod;
-import fish.focus.schema.exchange.movement.v1.SetReportMovementType;
 import fish.focus.schema.exchange.plugin.types.v1.PluginType;
 import fish.focus.schema.exchange.registry.v1.ExchangeRegistryMethod;
 import fish.focus.schema.exchange.service.v1.CapabilityListType;
@@ -11,7 +9,6 @@ import fish.focus.schema.exchange.service.v1.ServiceType;
 import fish.focus.schema.exchange.service.v1.SettingListType;
 import fish.focus.uvms.exchange.model.constant.ExchangeModelConstants;
 import fish.focus.uvms.exchange.model.mapper.ExchangeModuleRequestMapper;
-import fish.focus.uvms.plugins.inmarsat.data.ModuleQueue;
 import fish.focus.uvms.plugins.inmarsat.message.PluginMessageProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +21,6 @@ import javax.ejb.Startup;
 import javax.ejb.Timer;
 import javax.inject.Inject;
 import javax.jms.JMSException;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,24 +28,14 @@ import java.util.concurrent.ConcurrentMap;
 
 @Startup
 @Singleton
-public class InmarsatPlugin  {
-
+public class InmarsatPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(InmarsatPlugin.class);
 
     private static final int MAX_NUMBER_OF_TRIES = 20;
-    private boolean isRegistered = false;
-    private int numberOfTriesExecuted = 0;
-    private String registerClassName;
-    private CapabilityListType capabilityList;
-    private SettingListType settingList;
-    private ServiceType serviceType;
     private static final String PLUGIN_PROPERTIES = "plugin.properties";
     private static final String SETTINGS_PROPERTIES = "settings.properties";
     private static final String CAPABILITIES_PROPERTIES = "capabilities.properties";
     private final ConcurrentMap<String, String> capabilities = new ConcurrentHashMap<>();
-    private Properties twostageApplicationProperties;
-    private Properties twostageProperties;
-    private Properties twostageCapabilities;
 
     @Inject
     private PluginMessageProducer messageProducer;
@@ -57,34 +43,44 @@ public class InmarsatPlugin  {
     @Inject
     private HelperFunctions functions;
 
-    @Inject SettingsHandler settingsHandler;
+    @Inject
+    private SettingsHandler settingsHandler;
+    private boolean isRegistered = false;
+    private int numberOfTriesExecuted = 0;
+    private String registerClassName;
+    private CapabilityListType capabilityList;
+    private SettingListType settingList;
+    private ServiceType serviceType;
+    private Properties twoStageApplicationProperties;
+    private Properties twoStageProperties;
+    private Properties twoStageCapabilities;
 
     private ConcurrentMap<String, String> getCapabilities() {
         return capabilities;
     }
 
     private Properties getPluginApplicationProperties() {
-        return twostageApplicationProperties;
+        return twoStageApplicationProperties;
     }
 
     private void setPluginApplicationProperties(Properties twostageApplicaitonProperties) {
-        this.twostageApplicationProperties = twostageApplicaitonProperties;
+        this.twoStageApplicationProperties = twostageApplicaitonProperties;
     }
 
     private Properties getPluginProperties() {
-        return twostageProperties;
+        return twoStageProperties;
     }
 
     private void setPluginProperties(Properties twostageProperties) {
-        this.twostageProperties = twostageProperties;
+        this.twoStageProperties = twostageProperties;
     }
 
     private Properties getPluginCapabilities() {
-        return twostageCapabilities;
+        return twoStageCapabilities;
     }
 
-    private void setPluginCapabilities(Properties twostageCapabilities) {
-        this.twostageCapabilities = twostageCapabilities;
+    private void setPluginCapabilities(Properties twoStageCapabilities) {
+        this.twoStageCapabilities = twoStageCapabilities;
     }
 
     @PostConstruct
@@ -123,18 +119,18 @@ public class InmarsatPlugin  {
     @Schedule(second = "*/10", minute = "*", hour = "*", persistent = false)
     private void timeout(Timer timer) {
         try {
-            LOGGER.info("HEARTBEAT timeout running. isRegistered=" + isRegistered +
-                    " ,numberOfTriesExecuted=" + numberOfTriesExecuted + " threadId=" + Thread.currentThread().toString());
+            LOGGER.info("HEARTBEAT timeout running. isRegistered={} ,numberOfTriesExecuted={} threadId={}",
+                    isRegistered, numberOfTriesExecuted, Thread.currentThread());
             if (!isRegistered && numberOfTriesExecuted < MAX_NUMBER_OF_TRIES) {
-                LOGGER.info(getRegisterClassName() + " is not registered, trying to register");
+                LOGGER.info("{} is not registered, trying to register", getRegisterClassName());
                 register();
                 numberOfTriesExecuted++;
             }
             if (isRegistered) {
-                LOGGER.info(getRegisterClassName() + " is registered. Cancelling timer.");
+                LOGGER.info("{} is registered. Cancelling timer.", getRegisterClassName());
                 timer.cancel();
             } else if (numberOfTriesExecuted >= MAX_NUMBER_OF_TRIES) {
-                LOGGER.info(getRegisterClassName() + " failed to register, maximum number of retries reached.");
+                LOGGER.info("{} failed to register, maximum number of retries reached.", getRegisterClassName());
             }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -176,7 +172,7 @@ public class InmarsatPlugin  {
         try {
             return (String) getPluginApplicationProperties().get(key);
         } catch (Exception e) {
-            LOGGER.error("Failed to getSetting for key: " + key, getRegisterClassName());
+            LOGGER.error("Failed to getSetting for key: {} {}", key, getRegisterClassName());
             return null;
         }
     }
@@ -186,7 +182,7 @@ public class InmarsatPlugin  {
     }
 
     public void setIsRegistered(boolean isRegistered) {
-        LOGGER.info("setRegistered : " + isRegistered);
+        LOGGER.info("setRegistered : {}", isRegistered);
         this.isRegistered = isRegistered;
     }
 
@@ -194,29 +190,12 @@ public class InmarsatPlugin  {
         try {
             return (String) getPluginApplicationProperties().get("application.name");
         } catch (Exception e) {
-            LOGGER.error("Failed to getSetting for key: application.name: " + getRegisterClassName());
+            LOGGER.error("Failed to getSetting for key: application.name: {}", getRegisterClassName());
             return null;
-        }
-    }
-
-    private boolean sendMovementReportToExchange(SetReportMovementType reportType) {
-        try {
-            String text = ExchangeModuleRequestMapper.createSetMovementReportRequest(reportType, "TWOSTAGE",
-                    null, Instant.now(),  PluginType.SATELLITE_RECEIVER, "TWOSTAGE", null);
-            String messageId = messageProducer.sendModuleMessage(text, ModuleQueue.EXCHANGE, ExchangeModuleMethod.SET_MOVEMENT_REPORT.value());
-            LOGGER.debug("Sent to exchange - text:{}, id:{}", text, messageId);
-            return true;
-        } catch (RuntimeException e) {
-            LOGGER.error("Couldn't map movement to setreportmovementtype", e);
-            return false;
-        } catch (JMSException e) {
-            LOGGER.error("couldn't send movement", e);
-            return false;
         }
     }
 
     public AcknowledgeTypeType setReport(ReportType report) {
         return AcknowledgeTypeType.NOK;
     }
-
 }
