@@ -11,7 +11,7 @@
   <groupId>fish.focus.uvms.plugins.inmarsat</groupId>
   <artifactId>inmarsat</artifactId>
   <name>inmarsat</name>
-  <version>3.2.1</version>
+  <version>3.2.2</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -21,7 +21,7 @@
   </scm>
 
   <properties>
-    <docker.dev.version>4.5.0</docker.dev.version>
+    <docker.dev.version>4.6.3</docker.dev.version>
     <uvms.common.version>4.2.0</uvms.common.version>
     <exchange.model.version>5.4.0</exchange.model.version>
     <scm.url>scm:git:https://github.com/FocusFish/UVMS-Inmarsat-PLUGIN.git</scm.url>
