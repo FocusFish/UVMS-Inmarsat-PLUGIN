@@ -21,17 +21,21 @@ import javax.ejb.Startup;
 import javax.ejb.Timer;
 import javax.inject.Inject;
 import javax.jms.JMSException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Startup
 @Singleton
 public class InmarsatPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(InmarsatPlugin.class);
 
-    private static final int MAX_NUMBER_OF_TRIES = 20;
     private static final String PLUGIN_PROPERTIES = "plugin.properties";
     private static final String SETTINGS_PROPERTIES = "settings.properties";
     private static final String CAPABILITIES_PROPERTIES = "capabilities.properties";
@@ -46,7 +50,8 @@ public class InmarsatPlugin {
     @Inject
     private SettingsHandler settingsHandler;
     private boolean isRegistered = false;
-    private int numberOfTriesExecuted = 0;
+    private int numberOfRegistrationAttempts = 0;
+    private Instant lastRegistrationAttempt;
     private String registerClassName;
     private CapabilityListType capabilityList;
     private SettingListType settingList;
@@ -119,25 +124,49 @@ public class InmarsatPlugin {
     @Schedule(second = "*/10", minute = "*", hour = "*", persistent = false)
     private void timeout(Timer timer) {
         try {
-            LOGGER.info("HEARTBEAT timeout running. isRegistered={} ,numberOfTriesExecuted={} threadId={}",
-                    isRegistered, numberOfTriesExecuted, Thread.currentThread());
-            if (!isRegistered && numberOfTriesExecuted < MAX_NUMBER_OF_TRIES) {
+            LOGGER.info("HEARTBEAT timeout running. isRegistered={}, numberOfTriesExecuted={}",
+                    isRegistered, numberOfRegistrationAttempts);
+
+            if (!isRegistered && shouldTryToRegister()) {
                 LOGGER.info("{} is not registered, trying to register", getRegisterClassName());
                 register();
-                numberOfTriesExecuted++;
+                numberOfRegistrationAttempts++;
             }
             if (isRegistered) {
                 LOGGER.info("{} is registered. Cancelling timer.", getRegisterClassName());
+                numberOfRegistrationAttempts = 0;
                 timer.cancel();
-            } else if (numberOfTriesExecuted >= MAX_NUMBER_OF_TRIES) {
-                LOGGER.info("{} failed to register, maximum number of retries reached.", getRegisterClassName());
             }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
     }
 
+    private boolean shouldTryToRegister() {
+        var now = Instant.now();
+
+        // Default every 10min
+        ChronoUnit backOffTimeUnit = MINUTES;
+        int backOffTime = 10;
+
+        if (numberOfRegistrationAttempts < 5) {
+            // every 10s
+            backOffTimeUnit = SECONDS;
+        } else if (numberOfRegistrationAttempts < 20) {
+            // every minute
+            backOffTime = 1;
+        }
+
+        Instant earliestNextAttempt = lastRegistrationAttempt.plus(backOffTime, backOffTimeUnit);
+        boolean shouldTryReconnect = !now.isBefore(earliestNextAttempt);
+        LOGGER.info("{} registration attempts. Last attempt at {}. Earliest next attempt at {}. Now is {}. Register now = {}",
+                numberOfRegistrationAttempts, lastRegistrationAttempt, earliestNextAttempt, now, shouldTryReconnect);
+
+        return shouldTryReconnect;
+    }
+
     private void register() {
+        lastRegistrationAttempt = Instant.now();
         LOGGER.info("Registering to Exchange Module");
         try {
             String registerServiceRequest = ExchangeModuleRequestMapper.createRegisterServiceRequest(serviceType, capabilityList, settingList);
