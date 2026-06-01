@@ -23,7 +23,7 @@
   <properties>
     <docker.dev.version>4.7.0</docker.dev.version>
     <uvms.common.version>4.2.0</uvms.common.version>
-    <exchange.model.version>5.4.0</exchange.model.version>
+    <exchange.model.version>5.5.0</exchange.model.version>
     <scm.url>scm:git:https://github.com/FocusFish/UVMS-Inmarsat-PLUGIN.git</scm.url>
     <scm.connection>${scm.url}</scm.connection>
     <defaultLibBundleDir>APP-INF/lib</defaultLibBundleDir>
